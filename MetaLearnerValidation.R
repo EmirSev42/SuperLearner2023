@@ -2,7 +2,7 @@
 ## Author: Emir S
 ## Created: March 9, 2023
 ## Version: 
-## Last-Updated: June 6, 2023
+## Last-Updated: June 15, 2023
 ##           By: 
 ##     Update #: 5
 #----------------------------------------------------------------------
@@ -80,6 +80,7 @@ sample<-loob(df,B=B)
 # ----------------------------------------------------------------------- #
 
 # let's test one step of our algorithm to make sure it works...
+# function that performs the super-learner algorithm for one subsample
 source("./functions/SLOneStep.R")
 # see corresponding file for info
 
@@ -98,7 +99,7 @@ event.SL.library <- cens.SL.library <- c("survSL.coxph",
 
 # start time
 onestep_st<-Sys.time()
-# call function for subsample 1
+# call our one-step function for subsample 1
 foo<-one_step(samples_list=sample,B=1,times=1:5,event_library=event.SL.library,
               cens_library=cens.SL.library)
 # end time
