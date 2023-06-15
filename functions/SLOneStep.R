@@ -62,7 +62,7 @@ one_step<-function(samples_list,B,times=1:5,event_library,cens_library){
 
   # call survSuperLearner with the appropriate inputs
   sl_fit<-survSuperLearner(time=train_years,event=train_event,X=train_matrix,
-                           new.times=times,event.SL.library=event_library,verbose=F,
+                           new.times=times,event.SL.library=event_library,verbose=T,
                            cens.SL.library=cens_library,newX = test_matrix)
   
   
