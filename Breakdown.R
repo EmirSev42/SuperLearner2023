@@ -14,9 +14,11 @@
 # This is the informal "breakdown" of the main function (computing coefficients alpha);
 # called "survSuperLearner" in the survSuperLearner package
 
+# Here is Dr.Westling's Github with all of the codes:
+# https://github.com/tedwestling/survSuperLearner/tree/master
 
 # The "important" bit, where the coefficients are computed, is marked clealy as "THE IMPORTANT PART" with the comments
-# the function that does this is called .survComputeCoef, and it is an internal function; we break it down here.
+# the function that does this is called .survComputeCoef, and it is an internal function
 # I hope this helps do a degree!
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
