@@ -422,7 +422,7 @@ if (all(cens.Z == 0))  stop("All algorithms dropped from censoring library")
 }
 
 # NOTE: the function inputs are deceptive! It's not the "time" and "event" that we set up in Part 1
-# We will set this up now
+# We will set this up now.
 
 # the k's: event dimensioms
 event.k <- dim(event.Z)[3]
@@ -479,7 +479,129 @@ event.cens.long <- rep(event, cens.n.time)
 event.t.grid.long <- rep(control$event.t.grid, each = N)
 cens.t.grid.long <- rep(control$cens.t.grid, each = N)
 
+# next: an initial weighting algorithm is set.
+# in this case, it is just a random forest, set on the CENSORING as the event
+# that is: event = 1 - event                                                              
+# the new time is our time input minus epsilon
+initWeightAlg <- get(control$initWeightAlg)
+initFit <- initWeightAlg(time = time, event = 1 - event, X = X, newX = X,
+                         new.times = time - epsilon,
+                         obsWeights = obsWeights, id = id)
+                                                                
+# the DIAGONAL of the predictions are taken
+# so each prediction is for the corresponding observed time.
+# i.e: for i=1 take t1-eps, i=2 take e2-eps, i=3 take t3-eps etc...
+# then put these into long form (replicate)
+obs.cens.vals <- rep(diag(initFit$pred), length(control$event.t.grid))
 
+# next, we get an initial estimate of coefficients
+# set the coefficients as zero (length is equal to the number of candidate learners)
+S.coef <- rep(0, event.k)
 
+# ----------- WE NOW HAVE ALL THE INPUTS WE NEED FOR THE .suvComputeCoef function! ------------ #
+# But how does it work?
+
+ .survcomputeCoef <- function(time, event, t.vals, cens.vals, preds, obsWeights) {
+   # IF only one set of predictions exist (so there is only one library), then we return 1 for all coefs
+  if(ncol(preds) == 1) return(1)
+   # next: for any censoring values too small, set them to 1e-4
+  cens.vals[cens.vals < 1e-4] <- 1e-4
+   # next: set out = 1 - { I(time < TimeGrid) * Event / CensoringValues }
+   # where ALL ARE IN LONG FORM AS SET UP EARLIER
+  out <- 1 - as.numeric(time <= t.vals) * event / cens.vals
+  # next: use NNLS (non-negative least squares) to solve min ||Ax-b||_2
+  # WHERE A = sqrt(obsWeights) * preds, and B = sqrt(obsWeights) * out
+  fit.nnls <- nnls::nnls(sqrt(obsWeights) * preds, sqrt(obsWeights) * out)
+  # grab the coefficients of this optimization
+  coef <- coef(fit.nnls)
+   # warn if all are zero
+  if(sum(coef) == 0) {
+    warning("All coefficients in NNLS fit are zero.")
+    coef <- rep(1,length(coef))
+  }
+   # take them as proportions; i.e standardize
+  coef  / sum(coef)
+}                                                               
+
+# first this function is applied once to grab the initial coefficients for the SURVIVAL curve (S)
+# # what's important for now are the INPUTS:
+# time, event, tvals,censvals, obsweights and preds are all LONG FORM                                                          
+S.coef[!event.errorsInLibrary] <- .survcomputeCoef(time = time.event.long,
+                                                   event = event.event.long,
+                                                   t.vals = event.t.grid.long,
+                                                   cens.vals = obs.cens.vals,
+                                                   preds = event.Z.long[,!event.errorsInLibrary, drop=FALSE],
+                                                   obsWeights = obsWeights.event.long)
+
+# next, this is created
+obs.event.vals <- rep(c(event.Z.obs %*% S.coef), length(control$cens.t.grid))                                                                
+                                                                
+# here is what this is:
+# take the predictions for the observed values from the base learners:
+event.Z.obs%>%head()
+event.Z.obs%>%dim() 
+
+ # multiply it by the initial coefficient estimate
+c(event.Z.obs %*% S.coef)%>%head()
+c(event.Z.obs %*% S.coef)%>%length()
+
+ # then long form it (replicate tgrid = 250 times). Here is how they look:
+obs.event.vals%>%head()
+obs.event.vals%>%length()                                                               
+
+ # Now, how does the algorithm loop?
+# ----------------------------------------------------------------------- #
+# STEP 4: ONE STEP OF THE LOOP
+# ----------------------------------------------------------------------- #
+                                                                
+# first, if obs.cens.vals and obs.event.vals are not empty, set the old to be the current versions
+if(!is.null(obs.cens.vals)) obs.cens.vals.old <- obs.cens.vals
+if(!is.null(obs.event.vals)) obs.event.vals.old <- obs.event.vals
+
+# next, update the obs.cens.vals by using the compute coef function on the CENSORING
+G.coef <- rep(0, cens.k)
+G.coef[!cens.errorsInLibrary] <- .survcomputeCoef(time = time.cens.long,
+                                                  event = 1 - event.cens.long,
+                                                  t.vals = cens.t.grid.long,
+                                                  cens.vals = obs.event.vals,
+                                                  preds = cens.Z.long[,!cens.errorsInLibrary, drop=FALSE],
+                                                  obsWeights = obsWeights.cens.long)
+
+# multiply observed censoring probabilities by the computed coefficient for G
+# and then long form it
+obs.cens.vals <- rep(c(cens.Z.obs %*% G.coef), length(control$event.t.grid))
+# if there are any zeroes, set them to the minimum non-zero value
+obs.cens.vals[obs.cens.vals == 0] <- min(obs.cens.vals[obs.cens.vals > 0])
+
+# old values
+obs.cens.vals.old%>%head()
+# new values
+obs.cens.vals%>%head()
+
+# update observed event vals similarly, using the EVENT as the input
+S.coef[!event.errorsInLibrary] <- .survcomputeCoef(time = time.event.long, 
+                                                   event = event.event.long,
+                                                   t.vals = event.t.grid.long, 
+                                                   cens.vals = obs.cens.vals,
+                                                   preds = event.Z.long[,!event.errorsInLibrary, drop=FALSE],
+                                                   obsWeights = obsWeights.event.long)
+
+# update the event values by multiplying the predictions for observed times
+# by the current coefficients for S, and log form it
+obs.event.vals <- rep(c(event.Z.obs %*% S.coef), length(control$cens.t.grid))
+# similarly replace zeroes
+obs.event.vals[obs.event.vals == 0] <- min(obs.event.vals[obs.event.vals > 0])
+
+# set the differences between current and old values
+cens.delta <- max(abs(obs.cens.vals - obs.cens.vals.old))
+cens.delta
+event.delta <- max(abs(obs.event.vals - obs.event.vals.old))
+event.delta
+
+# check convergence condition
+cens.delta + event.delta < 1e-5
+
+# if it didnt converge, go to the next iteration; so run .survComputeCoef for both the event and censoring values
+# using the current "obs.cens.vals" value, and grab the new coefficients...                                                                
 
                                                                 
