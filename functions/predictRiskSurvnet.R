@@ -33,14 +33,11 @@ predictRisk.survnet<-function(object,newdata,times,cause){
   cat("prepating data...\n")
   disc_predictors<-newdata[,c("male","dm","cvd")]
   dummy <- caret::dummyVars(" ~ .", data=disc_predictors)
-  # use the predict function with the dummy object for the data
   disc_predictors_encoded <- data.frame(predict(dummy, newdata = disc_predictors))
   cont_predictors<-newdata[,c("age","gfr21","pACRc")]
   cont_predictors_rescaled<-data.frame(lapply(cont_predictors,scale))
-  # data matrix for survnet
   x<-data.frame(disc_predictors_encoded,
                 cont_predictors_rescaled)
-  # acquire predictions
   cat("acquiring predictions...\n")
   predictions_matrix <- survnet:::predict.survnet(object=object,newdata=x,
                                                   cause=cause)
@@ -63,15 +60,11 @@ predictRisk.pk <- function(object,fit.object=fit_survnet,newdata,times,cause){
   cat("\n prepating data...\n")
   disc_predictors<-newdata[,c("male","dm","cvd")]
   dummy <- caret::dummyVars(" ~ .", data=disc_predictors)
-  # use the predict function with the dummy object for the data
   disc_predictors_encoded <- data.frame(predict(dummy, newdata = disc_predictors))
   cont_predictors<-newdata[,c("age","gfr21","pACRc")]
   cont_predictors_rescaled<-data.frame(lapply(cont_predictors,scale))
-  
-  # data matrix for survnet
   x<-data.frame(disc_predictors_encoded,
                 cont_predictors_rescaled)
-  # acquire predictions
   cat("\n acquiring predictions...\n")
   predictions_matrix <- survnet:::predict.survnet(fit.object,x)
   predictions<-t(sapply(1:nrow(predictions_matrix), function(i) {
