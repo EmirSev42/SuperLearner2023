@@ -1,3 +1,22 @@
 # Super learner goes survival
 
-This project aims to ...
+# This project aims to apply the Super Learning method to our kidney disease cohort, and use LOOB validation to get 
+# cross-validated predictions and score (Brier). 
+
+# We have several questions/parts where we'd like feedback:
+
+# 1. We want to find out if my approach in MetaLearnerValidation.R (loob sample to fit models in the subsamples and average brier scores across samples)
+# correct/viable, and how best to decide on a "final" meta learner model; as at each subsample we fit a different one,
+# thus we have different weights (alpha from Weslting's paper). 
+
+# 2. We understand what the code does for the survSuperLearner function, as shown in Breakdown.R; but
+# what we don't understand is the "why"'s: why is it that we optimize what we optimize in that function,
+# and how does that result in getting coefficient estimates? In other words, from a theoretical standpoints, how are the coefficients calculated?
+# I've had some trouble deciphering this from the paper.
+
+# 3. Somewhat unrelated: we have the PlaceholderSurvnet.R script that attempts to use the Score function
+# without doing the LOOB subsampling manually; using the placeholder to write a predictRisk function
+# for Survnet; and potentially other methods in the future. The result seems "ok" in so far as it calibrates
+# decently, but we're not sure if this is the best way to do this.
+
+# Mange tak!
