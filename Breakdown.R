@@ -5,7 +5,7 @@
 ## Author: Emir S
 ## Created: Feb 6, 2023 
 ## Version: 
-## Last-Updated: June 22, 2023
+## Last-Updated: Jun 30 2023 (09:48) 
 ##           By:
 ##     Update #:
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -190,7 +190,7 @@ event.library <- .createLibrary(event.SL.library)
 cens.library <- .createLibrary(cens.SL.library)
 
 # additional setups and checks
-vent.k <- nrow(event.library$library)
+event.k <- nrow(event.library$library)
 cens.k <- nrow(cens.library$library)
 event.kScreen <- length(event.library$screenAlgorithm)
 cens.kScreen <- length(cens.library$screenAlgorithm)

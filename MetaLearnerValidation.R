@@ -2,12 +2,15 @@
 ## Author: Emir S
 ## Created: March 9, 2023
 ## Version: 
-## Last-Updated: June 15, 2023
-##           By: 
-##     Update #: 5
+## Last-Updated: Jun 30 2023 (09:11) 
+##           By: Thomas Alexander Gerds
+##     Update #: 6
 #----------------------------------------------------------------------
 ## 
 ### Commentary: Meta-learner approach for super learning, with leave-one-out bootstrap validation
+###
+###             EMIR: please state here in more detail what this script tries to achieve
+###                   and perhaps where you would like to have my feedback/help/suggestions
 ## 
 ### Change Log:
 #----------------------------------------------------------------------
@@ -35,7 +38,8 @@ library(survXgboost)
 library(Ckmeans.1d.dp)
 
 # optional set wd
-# setwd("V:/RESEARCH_EMPLOYEES/EMIR SEVINC/G3b4_2023")
+try(setwd("V:/RESEARCH_EMPLOYEES/EMIR SEVINC/G3b4_2023"))
+try(setwd("~/research/SuperVision/Emir/SuperLearner2023/"))
 
 #----------------------------------------------------------------------
 # STEP 1: LOAD DATA
