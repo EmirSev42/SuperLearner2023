@@ -1,59 +1,50 @@
+
 #----------------------------------------------------------------------
 ## Author: Emir S
 ## Created: Feb 28, 2023
 ## Version: 
-## Last-Updated: 
+## Last-Updated: July 11, 2023
 ##           By: 
 ##     Update #: 
 #----------------------------------------------------------------------
 ## 
 ### Commentary: XGBOOST Library for SurvSuperLearner
-
-## notes: XGBoost requires some data processing (rescale continuous vars, and code discrete vars)
-# and have a time variable set as POSITIVE if it is NOT censored, and NEGATIVE if it IS censored
-# we could pre-process it and then run; the problem is the survSuperLearner function does not like that;
-# it wants to see a single consistent time, event and X (covariate matrix) input for ALL libraries considered
-# thus we have to any data changes for a specific library inside the library function itself, as we do here
-
-# the caveat is we have to select the variables to be considered manually each time
+## 
+### Change Log:
 #----------------------------------------------------------------------
 
 
 survSL.xgboost<-function(time, event, X, newX, new.times, obsWeights, ...){
   
   require(xgboost)
-  # surv wrapper for xgboost
+  # wrapper for xgboost
   require(survXgboost)
   # xgb dependency
   require(Ckmeans.1d.dp)
-  require(dplyr)
-
-  # time (event) positive: not censored, negative: censored
+  
   xbg_time<-ifelse(event == 1, time, -time)
-
-  # SELECT VARIABLES HERE
-  train_cont_predictors<-X%>%select(c("age","gfr21","pACRc"))
-  train_disc_predictors<-X%>%select("male","dm","cvd")
   
-  test_cont_predictors<-newX%>%select(c("age","gfr21","pACRc"))
-  test_disc_predictors<-newX%>%select("male","dm","cvd")
+  # model matrices
+  train_x<-model.matrix(~.,data=X)[,-1]
+  test_x<-model.matrix(~.,data=newX)[,-1]
   
-  # create the dummy variables object using caret
-  train_dummy <- caret::dummyVars(" ~ .", data=train_disc_predictors)
-  test_dummy <- caret::dummyVars(" ~ .", data=test_disc_predictors)
-  
-  train_disc_predictors_encoded <- data.frame(predict(train_dummy, newdata = train_disc_predictors))
-  test_disc_predictors_encoded <- data.frame(predict(test_dummy, newdata = test_disc_predictors))
-  
-  train_cont_predictors_rescaled<-data.frame(lapply(train_cont_predictors,scale))
-  test_cont_predictors_rescaled<-data.frame(lapply(test_cont_predictors,scale))
-  
-  
-  # final data matrices for train and test
-  train_x<-data.frame(train_disc_predictors_encoded,
-                      train_cont_predictors_rescaled)%>%as.matrix()
-  test_x<-data.frame(test_disc_predictors_encoded,
-                     test_cont_predictors_rescaled)%>%as.matrix()
+  # scale each column if it is not binary
+  train_x<-apply(train_x,2,function(x){
+    noNA<-x[!is.na(x)]
+    
+    if(length(unique(noNA))>2){
+      x<-scale(x)
+    }
+    return(x)
+  })
+  test_x<-apply(test_x,2,function(x){
+    noNA<-x[!is.na(x)]
+    
+    if(length(unique(noNA))>2){
+      x<-scale(x)
+    }
+    return(x)
+  })
   
   # "labels", in this case the status for melanoma
   labels<-xbg_time
@@ -80,4 +71,12 @@ survSL.xgboost<-function(time, event, X, newX, new.times, obsWeights, ...){
   
   return(out)
   
+}
+
+# predict functionality
+predict.survSL.xgb<-function(object, newX, new.times, ...){
+  test_x<-model.matrix(~.,data=newX)[,-1]
+  pred<-predict(object = object$object, newdata = test_x, type = "surv",
+                times = new.times)
+  return(pred)
 }
