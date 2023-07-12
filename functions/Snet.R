@@ -46,8 +46,13 @@ Snet <- function(formula,
     return(x)
   })
   
+  if(length(Time)<250){
+    time.grid<-seq(from=1,to=max(Time),length.out=250)
+  }
 
-  time.grid<-seq(from=1,to=max(Time),length.out=250)
+  if(length(Time>=250)){
+    time.grid<-sort(Time)
+  }
   
   
   ## calling survnet
@@ -104,8 +109,12 @@ head(d)
 # fit survnet
 fit_nn<-Snet(formula = Hist(time,event)~X1+X2+X3+X4+X5+X6+X7+X8+X9+X10,data = d)
 
+fit_nn$nnet_fit$breaks%>%length()
+
 # predict risks
 preds<-predictRisk.Snet(object=fit_nn,newdata=d,times=1:12)
+preds%>%head()
+
 
 # Score
 x<-Score(list("Survnet"=fit_nn),
