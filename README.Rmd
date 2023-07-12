@@ -5,18 +5,18 @@
 
 # We have several questions/parts where we'd like feedback:
 
-# 1. We want to find out if my approach in MetaLearnerValidation.R (loob sample to fit models in the subsamples and average brier scores across samples)
-# correct/viable, and how best to decide on a "final" meta learner model; as at each subsample we fit a different one,
-# thus we have different weights (alpha from Weslting's paper). 
+# UPDATE: progress on step 1; we were able to incorporate the survSuperLearner method (Meta Learner from Westling's paper) 
+# into the Score function, including with split.method specified.
+
+# 1. Our main goal is to compare a discrete learner (pick a winner) with a meta learner in our setting. We would also like to understand how 
+# best to pick a "final" meta learner using model validation.
 
 # 2. We understand what the code does for the survSuperLearner function, as shown in Breakdown.R; but
 # what we don't understand is the "why"'s: why is it that we optimize what we optimize in that function,
 # and how does that result in getting coefficient estimates? In other words, from a theoretical standpoints, how are the coefficients calculated?
 # I've had some trouble deciphering this from the paper.
 
-# 3. Somewhat unrelated: we have the PlaceholderSurvnet.R script that attempts to use the Score function
-# without doing the LOOB subsampling manually; using the placeholder to write a predictRisk function
-# for Survnet; and potentially other methods in the future. The result seems "ok" in so far as it calibrates
-# decently, but we're not sure if this is the best way to do this.
+# 3. (placeholder function for Survnet, redundant)
 
-# Mange tak!
+# UPDATE: Step 3 complete; we were able to write wrappers for both Survnet and Xgboost that allows formula inputs,
+# and predictRisk functionality that allows using them with the Score function, including with split.method specified.
