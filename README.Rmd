@@ -3,20 +3,4 @@
 # This project aims to apply the Super Learning method to our kidney disease cohort, and use LOOB validation to get 
 # cross-validated predictions and score (Brier). 
 
-# We have several questions/parts where we'd like feedback:
-
-# UPDATE: progress on step 1; we were able to incorporate the survSuperLearner method (Meta Learner from Westling's paper) 
-# into the Score function, including with split.method specified.
-
-# 1. Our main goal is to compare a discrete learner (pick a winner) with a meta learner in our setting. We would also like to understand how 
-# best to pick a "final" meta learner using model validation.
-
-# 2. We understand what the code does for the survSuperLearner function, as shown in Breakdown.R; but
-# what we don't understand is the "why"'s: why is it that we optimize what we optimize in that function,
-# and how does that result in getting coefficient estimates? In other words, from a theoretical standpoints, how are the coefficients calculated?
-# I've had some trouble deciphering this from the paper.
-
-# 3. (placeholder function for Survnet, redundant)
-
-# UPDATE: Step 3 complete; we were able to write wrappers for both Survnet and Xgboost that allows formula inputs,
-# and predictRisk functionality that allows using them with the Score function, including with split.method specified.
+PROTOCOL UPDATE: 27/07/2023, included comments from our (Emir and Thomas) discussion on the objective of the protocol. 
